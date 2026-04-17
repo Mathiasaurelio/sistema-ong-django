@@ -1,0 +1,13 @@
+{% extends 'materiais/base.html' %}
+
+{% block conteudo %}
+    <h1>➕ Cadastrar Novo Material</h1>
+
+    <div class="form-container">
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Salvar Material</button>
+        </form>
+    </div>
+{% endblock %}

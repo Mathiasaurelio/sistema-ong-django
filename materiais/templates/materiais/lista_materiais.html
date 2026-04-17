@@ -1,0 +1,36 @@
+{% extends 'materiais/base.html' %}
+
+{% block conteudo %}
+    <h1>📦 Controle de Estoque da Instituição</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nome do Material</th>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Estado</th>
+                <th>Ações</th> </tr>
+        </thead>
+        <tbody>
+            {% for item in materiais %}
+            <tr>
+                <td>{{ item.nome }}</td>
+                <td>{{ item.categoria }}</td>
+                <td>{{ item.quantidade }} unidades</td>
+                <td>{{ item.estado }}</td>
+                
+                <td>
+                    <a href="{% url 'editar_material' item.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;">✏️ Editar</a>
+                    <a href="{% url 'excluir_material' item.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
+                </td>
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Nenhum material cadastrado ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

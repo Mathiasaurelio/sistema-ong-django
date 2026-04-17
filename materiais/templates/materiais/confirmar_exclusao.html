@@ -1,0 +1,16 @@
+{% extends 'materiais/base.html' %}
+
+{% block conteudo %}
+    <div class="form-container" style="text-align: center; margin: 0 auto; margin-top: 50px;">
+        <h1 style="color: #d9534f;">⚠️ Atenção!</h1>
+        
+        <p>Você tem certeza que deseja excluir o material <strong>{{ material.nome }}</strong>?</p>
+        <p>Esta ação não poderá ser desfeita.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #d9534f;">🗑️ Sim, Quero Excluir</button>
+            <a href="{% url 'lista_materiais' %}" class="btn-voltar" style="display: block; margin-top: 20px;">Cancelar e Voltar</a>
+        </form>
+    </div>
+{% endblock %}
