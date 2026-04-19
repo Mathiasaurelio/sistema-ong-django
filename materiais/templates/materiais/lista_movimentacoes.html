@@ -1,0 +1,11 @@
+<h1>Movimentações de Estoque</h1>
+
+<ul> 
+    {% for m in movimentacoes %}
+        <li>
+            {{ m.data }} - {{ m.tipo}} - {{ m.material.nome }} - {{ m.quantidade }}
+        </li>        
+    {% empty %}
+        <li>Nenhuma movimentação registrada.</li>
+    {% endfor %}
+</ul>

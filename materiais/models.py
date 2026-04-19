@@ -1,7 +1,10 @@
 from django.db import models
+from django.db.models import Sum
+from django.core.exceptions import ValidationError
 
+# Modelo para materiais
 class Material(models.Model):
-    # Definindo opções fixas (Boas práticas para evitar erros de digitação dos usuários)
+    # Definindo opções fixas 
     CATEGORIAS_CHOICES = [
         ('ALIMENTOS', 'Alimentos não perecíveis'),
         ('VESTUARIO', 'Roupas e Calçados'),
@@ -16,10 +19,9 @@ class Material(models.Model):
         ('REPARO', 'Usado (Precisa de pequenos reparos)'),
     ]
 
-    # Criando as colunas da tabela
+    # Colunas da tabela
     nome = models.CharField(max_length=150, verbose_name="Nome do Material")
     categoria = models.CharField(max_length=20, choices=CATEGORIAS_CHOICES, verbose_name="Categoria")
-    quantidade = models.IntegerField(verbose_name="Quantidade em Estoque")
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, verbose_name="Estado de Conservação")
     
     # Textos longos para detalhes e histórico
@@ -30,5 +32,48 @@ class Material(models.Model):
 
     # Como o material vai se "apresentar" quando listado
     def __str__(self):
-        return f"{self.nome} - {self.quantidade} unidades"
-# Create your models here.
+        return self.nome
+    
+    # Atualização automática da quantidade no estoque 
+    def estoque_atual(self):
+        entradas = self.movimentacao_set.filter(tipo='E').aggregate(total=models.Sum('quantidade'))['total'] or 0
+        saidas = self.movimentacao_set.filter(tipo='S').aggregate(total=models.Sum('quantidade'))['total'] or 0
+        return entradas - saidas
+    
+# Modelo para movimentações
+class Movimentacao(models.Model):
+    TIPO_MOVIMENTACAO = [
+        ('E', 'Entrada'),
+        ('S', 'Saída'),
+    ]
+
+    material = models.ForeignKey('Material', on_delete=models.CASCADE)
+    tipo = models.CharField(max_length=1, choices=TIPO_MOVIMENTACAO)
+    quantidade = models.PositiveBigIntegerField()
+    data = models.DateTimeField(auto_now_add=True)
+    observacao = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.material} - {self.get_tipo_display()} - {self.quantidade}"
+    
+    # Regra para impedir a quantidade de Saída maior que a quantidade contida no Estoque  
+    def clean(self):
+        if self.tipo == 'S':
+            estoque_atual = self.material.estoque_atual()
+
+            if self.pk:
+                movimentacao_antiga = Movimentacao.objects.get(pk=self.pk)
+                if movimentacao_antiga.tipo == 'S':
+                    estoque_atual += movimentacao_antiga.quantidade
+                else:
+                    estoque_atual -= movimentacao_antiga.quantidade
+            
+            if self.quantidade > estoque_atual:
+                raise ValidationError('Quantidade de saída maior que o estoque disponível.')
+    
+    # Função para que a função clean() seja chamada automáticamente
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    

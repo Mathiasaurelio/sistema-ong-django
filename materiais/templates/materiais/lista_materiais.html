@@ -13,11 +13,11 @@
                 <th>Ações</th> </tr>
         </thead>
         <tbody>
-            {% for item in materiais %}
+            {% for item in estoque_atual %}
             <tr>
                 <td>{{ item.nome }}</td>
                 <td>{{ item.categoria }}</td>
-                <td>{{ item.quantidade }} unidades</td>
+                <td>{{ <item class="estoque_atual"}} unidades></item>/td>
                 <td>{{ item.estado }}</td>
                 
                 <td>
