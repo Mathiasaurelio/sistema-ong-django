@@ -13,6 +13,12 @@ class MaterialForm(forms.ModelForm):
         }
 
 class MovimentacaoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.material = kwargs.pop('material', None)
+        super().__init__(*args, **kwargs)
+        
     class Meta:
         model = Movimentacao
-        fields = ['material',  'tipo', 'quantidade']
+        fields = ['tipo', 'quantidade']
+
+        

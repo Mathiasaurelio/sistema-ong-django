@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Material, Movimentacao
 from .forms import MaterialForm, MovimentacaoForm
+from django.contrib import messages
+from django.core.exceptions import ValidationError
 
 # Tela de estoque
 def lista_materiais(request):
@@ -41,7 +43,12 @@ def excluir_material(request, id):
     material = get_object_or_404(Material, id=id)
 
     if request.method == 'POST':
+        if material.movimentacoes.exists():
+            messages.error(request, 'Não é possível exluir um material que possui movimentações registradas.')
+            return redirect('lista_materiais')
+        
         material.delete() # O comando que apaga do banco de dados
+        messages.success(request, 'Material excluído com sucesso!')
         return redirect('lista_materiais')
 
     contexto = {'material': material}
@@ -53,13 +60,23 @@ def lista_movimentacoes(request):
     return render(request, 'materiais/lista_movimentacoes.html', {'movimentacoes': movimentacoes})
 
 # Tela cadastro de movimentações 
-def cadastro_movimentacoes(request):
+def cadastro_movimentacoes(request, id):
+    material = get_object_or_404(Material, id=id)
+
     if request.method == 'POST':
-        form = MovimentacaoForm(request.POST)
+        form = MovimentacaoForm(request.POST, material = material)
         if form.is_valid():
-            form.save()
-            return redirect('lista_movimentacoes')
+            movimentacao = form.save(commit=False)
+            movimentacao.material = material
+
+            try:
+                movimentacao.full_clean() 
+                movimentacao.save()
+                messages.success(request, 'Movimentação registrada com sucesso')
+                return redirect('lista_materiais')
+            except ValidationError as e:
+                form.add_error(None, e.message_dict.get('__all__', e.messages))
     else:
-        form = MovimentacaoForm()
-    
-    return render(request, 'materiais/form_movimentacao.html', {'form': form})
+        form = MovimentacaoForm(material=material)
+
+    return render(request, 'materiais/form_movimentacao.html', {'form': form, 'material': material})
