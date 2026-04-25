@@ -24,6 +24,7 @@
                     <a href="{% url 'editar_material' material.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;">✏️ Editar</a>
                     <a href="{% url 'excluir_material' material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
                     <a href="{% url 'cadastrar_movimentacao' material.id %}" style="background-color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> ➕Movimentar</a>
+                    <a href="{% url 'lista_movimentacoes' %}?material={{ material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
                 </td>
                 
             </tr>

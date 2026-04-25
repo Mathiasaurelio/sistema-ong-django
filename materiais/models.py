@@ -3,6 +3,17 @@ from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+# Modelo de institução cadastrada no sistema
+class Instituicao(models.Model):
+    nome = models.CharField(max_length=200, verbose_name="Nome da Instituição")
+    cnpj = models.CharField(max_length=18, unique=True, verbose_name="CNPJ")
+    endereco = models.CharField(max_length=255, verbose_name="Endereço")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    email = models.EmailField(verbose_name="E-mail")
+
+    def __str__(self):
+        return self.nome
+    
 # Modelo para materiais
 class Material(models.Model):
     # Definindo opções fixas 

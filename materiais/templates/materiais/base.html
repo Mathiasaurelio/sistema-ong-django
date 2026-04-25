@@ -39,9 +39,33 @@
         {% endfor %}
     {% endif %}
 
-    <div class="navbar">
-        <a href="{% url 'lista_materiais' %}">📦 Estoque</a>
-        <a href="{% url 'cadastrar_material' %}">➕ Cadastrar Doações</a>
+    <div class="navbar" style="display: flex; justify-content: space-between; align-items: center;">
+        <strong style="color: #ffdddd; font-size: 18px;">SGED - Sistema de Gestão de Estoque de Doações</strong>
+        <div>
+            <a href="{% url 'lista_materiais' %}">📦 Estoque</a>
+            <a href="{% url 'cadastrar_material' %}">➕ Cadastro de Materiais</a>
+            <a href="{% url 'relatorio_estoque' %}">📊 Relatório</a>
+            <a href="{% url 'instituicao_config' %}">🏢 Instituição</a>
+        </div>
+
+        <div style="color: white;">
+            👤 {{ request.user.username }} |
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" style="
+                background-color:none; 
+                border: none; 
+                color: #ffdddd; 
+                cursor: pointer; 
+                font-size: 14px; 
+                width: auto; 
+                padding: 0; 
+                margin: 0;
+                ">
+                🔓 Sair
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="container">

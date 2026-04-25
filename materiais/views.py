@@ -1,16 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Material, Movimentacao
-from .forms import MaterialForm, MovimentacaoForm
+from .models import Material, Movimentacao, Instituicao
+from .forms import MaterialForm, MovimentacaoForm, InstituicaoForm
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.contrib.auth.decorators import login_required
 
 # Tela de estoque
+@login_required
 def lista_materiais(request):
+    if not Instituicao.objects.exists():
+        return redirect('instituicao_config')
+    
     materiais_no_banco = Material.objects.all()
     contexto = {'materiais': materiais_no_banco}
     return render(request, 'materiais/lista_materiais.html', contexto)
 
 # Tela de cadastro
+@login_required
 def cadastrar_material(request):
     if request.method == 'POST':
         form = MaterialForm(request.POST)
@@ -24,6 +30,7 @@ def cadastrar_material(request):
     return render(request, 'materiais/cadastro_material.html', contexto)
 
 # Tela de edição
+@login_required
 def editar_material(request, id):
     material = get_object_or_404(Material, id=id)
 
@@ -39,6 +46,7 @@ def editar_material(request, id):
     return render(request, 'materiais/cadastro_material.html', contexto)
 
 # Tela de exclusão
+@login_required
 def excluir_material(request, id):
     material = get_object_or_404(Material, id=id)
 
@@ -55,11 +63,19 @@ def excluir_material(request, id):
     return render(request, 'materiais/confirmar_exclusao.html', contexto)
 
 # Tela de listagem de movimentações (consulta)
+@login_required
 def lista_movimentacoes(request):
-    movimentacoes = Movimentacao.objects.all().order_by('-data')
+    material_id = request.GET.get('material')
+
+    if material_id:
+        movimentacoes = Movimentacao.objects.filter(material_id=material_id).order_by('-data')
+    else:
+        movimentacoes = Movimentacao.objects.all().order_by('-data')
+    
     return render(request, 'materiais/lista_movimentacoes.html', {'movimentacoes': movimentacoes})
 
 # Tela cadastro de movimentações 
+@login_required
 def cadastro_movimentacoes(request, id):
     material = get_object_or_404(Material, id=id)
 
@@ -80,3 +96,42 @@ def cadastro_movimentacoes(request, id):
         form = MovimentacaoForm(material=material)
 
     return render(request, 'materiais/form_movimentacao.html', {'form': form, 'material': material})
+
+# Tela de visualização e geração de relatório 
+@login_required
+def relatorio_estoque(request):
+    materiais = Material.objects.all()
+
+    dados = []
+    for material in materiais:
+        dados.append({
+            'nome' : material.nome,
+            'categoria' : material.categoria,
+            'estoque_atual' : material.estoque_atual()
+        })
+    
+    return render(request, 'materiais/relatorio_estoque.html', {'dados': dados}) 
+
+# Cadastro de instituições (tela institucional)
+@login_required
+def instituicao_config(request):
+    instiuicao = Instituicao.objects.first() 
+
+    if request.method == 'POST':
+        form = InstituicaoForm(request.POST, instance=instiuicao)
+        if form.is_valid():
+            try:
+                obkj = form.save(commit=False)
+                obkj.full_clean()
+                obkj.save() 
+                
+                messages.success(request, 'Informaçõs salvas com sucesso!')
+                return redirect('lista_materiais')
+            except ValidationError as e:
+                form.add.error(None, e.messages)
+        else:
+            messages.error(request, 'Por favor, corrija os erros abaixo.')
+    else:
+        form = InstituicaoForm(instance=instiuicao) 
+
+    return render(request, 'materiais/instituicao.html', {'form': form})
