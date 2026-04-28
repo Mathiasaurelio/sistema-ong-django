@@ -3,8 +3,6 @@ from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-<<<<<<< HEAD
-=======
 # Modelo de institução cadastrada no sistema
 class Instituicao(models.Model):
     nome = models.CharField(max_length=200, verbose_name="Nome da Instituição")
@@ -16,7 +14,6 @@ class Instituicao(models.Model):
     def __str__(self):
         return self.nome
     
->>>>>>> f1bdbbb0b09fece83f62523247bcc05483493c58
 # Modelo para materiais
 class Material(models.Model):
     # Definindo opções fixas 

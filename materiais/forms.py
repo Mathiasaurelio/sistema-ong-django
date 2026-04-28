@@ -1,10 +1,6 @@
 from django import forms
-<<<<<<< HEAD
-from .models import Material, Movimentacao
-=======
 from .models import Material, Movimentacao, Instituicao
 import re
->>>>>>> f1bdbbb0b09fece83f62523247bcc05483493c58
 
 class InstituicaoForm(forms.ModelForm):
     class Meta:
