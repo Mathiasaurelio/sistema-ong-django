@@ -1,5 +1,7 @@
 from django import forms
 from .models import Material, Movimentacao, Instituicao
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 import re
 
 class InstituicaoForm(forms.ModelForm):
@@ -72,4 +74,20 @@ class MovimentacaoForm(forms.ModelForm):
         model = Movimentacao
         fields = ['tipo', 'quantidade']
 
-        
+# Formulário para cadastro de usuários
+class CadastroUsuarioForm(UserCreationForm):
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label='Senha', help_text='A senha deve conter pelo menos 8 caracteres, incluindo letras e números.', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label='Confirme sua senha', help_text='Digite a mesma senha para confirmação.', widget=forms.PasswordInput(attrs={'class': 'form-control'})) 
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+        labels = {
+            'username': 'Usuário',
+            'email': 'E-mail',
+        }
+        help_texts = {
+            'username': 'O nome de usuário deve conter apenas letras, números e caracteres especiais.',
+            'email': 'Digite um endereço de e-mail válido.',
+        }   

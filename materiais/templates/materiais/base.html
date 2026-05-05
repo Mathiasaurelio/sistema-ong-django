@@ -6,12 +6,12 @@
 
     <title>Sistema de Gestão - ONG</title>
     <style>
-        /* Cores e estilos para o site inteiro num lugar só! */
+        /* Cores e estilos para o site inteiro */
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
-        .navbar { background-color: #333; overflow: hidden; padding: 15px; }
+        .navbar { background-color: #333; overflow: visible; padding: 15px; position:  z-index: 1000; }
         .navbar a { color: white; text-decoration: none; padding: 14px 20px; font-weight: bold; }
         .navbar a:hover { background-color: #ddd; color: black; border-radius: 4px; }
-        .container { padding: 40px; }
+        .container { padding: 40px; position: relative; z-index: 1; }
         
         /* Estilos da tabela */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
@@ -25,6 +25,17 @@
         input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; }
         button:hover { background-color: #45a049; }
+
+        .notification-badge {
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            position: absolute;
+            top: -5px;
+            right: -10px;
+        }
     </style>
 </head>
 <body>
@@ -36,23 +47,54 @@
                      {% elif message.tags == 'error' %}
                          background-color: #f8d7da; color: #721c24;
                      {% endif %}">
-                {{ message }}
+                     {{ message }}
             </div>
         {% endfor %}
-    {% endif %}
-
+    {% endif %} 
+   
+    {% if user.is_authenticated %}
     <div class="navbar" style="display: flex; justify-content: space-between; align-items: center;">
         <strong style="color: #ffdddd; font-size: 18px;">SGED - Sistema de Gestão de Estoque de Doações</strong>
-        <div>
+        <div class="d-flex align-items-center gap-3">
             <a href="{% url 'lista_materiais' %}">📦 Estoque</a>
             <a href="{% url 'cadastrar_material' %}">➕ Cadastro de Materiais</a>
             <a href="{% url 'relatorio_estoque' %}">📊 Relatório</a>
             <a href="{% url 'instituicao_config' %}">🏢 Instituição</a>
+
+            <div style="position: relative;">
+                <a href="#" id="icone-notificacoes" onclick="toggleNotificacoes(event)" style="font-size: 20px;">
+                🔔 
+                {% if notificacoes.total > 0 %}
+                    <span class="notification-badge">    
+                        {{ notificacoes.total }}
+                    </span>
+                {% endif %}
+                </a>
+                
+                <div id="box-notificacoes" style="display: none; position: absolute; top: 40px; right: 0; background: white; border: 1px solid #ccc; padding: 10px; width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 6px; z-index: 9999;">
+                    <strong>🚨 Vencidos</strong>
+                    <ul>
+                        {% for lote in notificacoes.vencidos %}
+                            <li>{{ lote.material.nome }} - {{ lote.quantidade }}</li>
+                        {% empty %}
+                            <li>Nenhum</li>
+                        {% endfor %}
+                    </ul>
+                    <strong>⚠️ Próximos do Vencimento</strong>
+                    <ul>
+                        {% for lote in notificacoes.proximos %}
+                            <li>{{ lote.material.nome }} - {{ lote.quantidade }}</li>
+                        {% empty %}
+                            <li>Nenhum</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
 
-        <div style="color: white;">
-            👤 {{ request.user.username }} |
-            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+    <div style="color: white;">
+        👤 {{ request.user.username }} |
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" style="
                 background-color:none; 
@@ -69,6 +111,7 @@
             </form>
         </div>
     </div>
+    {% endif %}
 
     <div class="container">
         
@@ -77,6 +120,22 @@
         
     </div>
 
+    <script>
+        function toggleNotificacoes(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const box = document.getElementById('box-notificacoes');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Fecha a caixa de notificações ao clicar fora dela
+        document.addEventListener('click', function(e) {
+            const box = document.getElementById('box-notificacoes');
+            if (!e.target.closest('#box-notificacoes') && !e.target.closest('#icone-notificacoes')) {
+                box.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
         <div class="container">
