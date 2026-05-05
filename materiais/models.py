@@ -1,8 +1,19 @@
+from datetime import date
 from django.db import models
 from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+# Modelo para lotes de materiais, permitindo controle de validade e quantidade por lote
+class Lote(models.Model):
+    material = models.ForeignKey('Material', on_delete=models.CASCADE, related_name='lotes')
+    quantidade = models.PositiveBigIntegerField()
+    data_entrada = models.DateTimeField(auto_now_add=True)
+    validade = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.material} - Lote {self.id} - Validade: {self.validade}"
+    
 # Modelo de institução cadastrada no sistema
 class Instituicao(models.Model):
     nome = models.CharField(max_length=200, verbose_name="Nome da Instituição")
@@ -42,15 +53,16 @@ class Material(models.Model):
     # Preenche a data e hora automaticamente no momento do cadastro
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
 
+    # Campo para controle de exclusão lógica
+    ativo = models.BooleanField(default=True, verbose_name="Ativo") 
+
     # Como o material vai se "apresentar" quando listado
     def __str__(self):
         return self.nome
     
     # Atualização automática da quantidade no estoque 
     def estoque_atual(self):
-        entradas = self.movimentacoes.filter(tipo='E', ativo=True).aggregate(total=models.Sum('quantidade'))['total'] or 0
-        saidas = self.movimentacoes.filter(tipo='S', ativo=True).aggregate(total=models.Sum('quantidade'))['total'] or 0
-        return entradas - saidas
+        return sum(l.quantidade for l in self.lotes.all())
 
 # Modelo para movimentações
 class Movimentacao(models.Model):
@@ -84,24 +96,11 @@ class Movimentacao(models.Model):
         # Garante que o campo de quantidade seja maior que 0     
         if self.quantidade <= 0:
             raise ValidationError('A quantidade deve ser maior que zero.')
-        
-        # Atualização dinâmica do estoque 
-        if self.tipo == 'S':
-            estoque_atual = self.material.estoque_atual()
-            if self.pk:
-                movimentacao_antiga = Movimentacao.objects.filter(pk=self.pk).first()
-                if movimentacao_antiga.tipo == 'S':
-                    estoque_atual += movimentacao_antiga.quantidade
-                else:
-                    estoque_atual -= movimentacao_antiga.quantidade
 
-            # Validação para que a quantidade de saída não seja maior que a quantidade do estoque 
-            if self.quantidade > estoque_atual:
-                raise ValidationError('Quantidade de saída maior que o estoque disponível.') 
 
     # Metódo para que a função clean() seja chamada automaticamente
     def save(self, *args, **kwargs):
-        self.full_clean()
+        self.full_clean()   
         super().save(*args, **kwargs)
 
     # Metódo para cancelamento de movimentações 
@@ -117,3 +116,5 @@ class Movimentacao(models.Model):
         self.ativo = False
         self.data_cancelamento = timezone.now()
         self.save()
+
+
