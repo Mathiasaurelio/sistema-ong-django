@@ -164,7 +164,7 @@ def relatorio_estoque(request):
         dados.append({
             'nome' : material.nome,
             'categoria' : material.categoria,
-            'estoque_atual' : material.estoque_atual()
+            'estoque_atual' : material.estoque_atual
         })
     
     return render(request, 'materiais/relatorio_estoque.html', {'dados': dados}) 
@@ -205,3 +205,14 @@ def cadastro_usuario(request):
         form = CadastroUsuarioForm()
 
     return render(request, 'cadastro_usuario.html', {'form': form})
+
+
+
+
+
+
+
+
+
+
+

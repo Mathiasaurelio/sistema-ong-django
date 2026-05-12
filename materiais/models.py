@@ -11,8 +11,16 @@ class Lote(models.Model):
     data_entrada = models.DateTimeField(auto_now_add=True)
     validade = models.DateField(null=True, blank=True)
 
+    def clean(self):
+        if self.material.categoria == 'ALIMENTOS' and not self.validade:
+            raise ValidationError("Materiais de alimentação devem ter uma data de validade.")
+
     def __str__(self):
         return f"{self.material} - Lote {self.id} - Validade: {self.validade}"
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
     
 # Modelo de institução cadastrada no sistema
 class Instituicao(models.Model):
@@ -46,8 +54,6 @@ class Material(models.Model):
     nome = models.CharField(max_length=150, verbose_name="Nome do Material")
     categoria = models.CharField(max_length=20, choices=CATEGORIAS_CHOICES, verbose_name="Categoria")
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, verbose_name="Estado de Conservação")
-    
-    # Textos longos para detalhes e histórico
     observacoes = models.TextField(blank=True, null=True, verbose_name="Observações Adicionais")
     
     # Preenche a data e hora automaticamente no momento do cadastro
@@ -61,8 +67,13 @@ class Material(models.Model):
         return self.nome
     
     # Atualização automática da quantidade no estoque 
-    def estoque_atual(self):
+    @property
+    def estoque_atual(self):    
         return sum(l.quantidade for l in self.lotes.all())
+    
+    @property
+    def vencido(self):
+        return self.lotes.filter(validade__lt=date.today()).exists()
 
 # Modelo para movimentações
 class Movimentacao(models.Model):
@@ -74,7 +85,6 @@ class Movimentacao(models.Model):
     material = models.ForeignKey('Material', on_delete=models.CASCADE, related_name='movimentacoes')
     tipo = models.CharField(max_length=1, choices=TIPO_MOVIMENTACAO)
     quantidade = models.PositiveBigIntegerField()
-    validade = models.DateField(null=True, blank=True)
     data = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField(blank=True, null=True)
     ativo = models.BooleanField(default=True)
@@ -110,7 +120,7 @@ class Movimentacao(models.Model):
             raise ValidationError('Esta movimentação já está cancelada.')
         
         if self.tipo == 'E':
-            estoque_atual = self.material.estoque_atual()
+            estoque_atual = self.material.estoque_atual(); 
             if estoque_atual - self.quantidade < 0:
                 raise ValidationError('Não é possível cancelar esta entrada, pois existem saídas dependentes.')
         

@@ -2,7 +2,26 @@ from django import forms
 from .models import Material, Movimentacao, Instituicao
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from datetime import date
 import re
+
+# Formulário para cadastro de usuários
+class CadastroUsuarioForm(UserCreationForm):
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label='Senha', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label='Confirme sua senha', widget=forms.PasswordInput(attrs={'class': 'form-control'})) 
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+        labels = {
+            'username': 'Usuário',
+            'email': 'E-mail',
+        }
+        help_texts = {
+            'username': 'O nome de usuário deve conter apenas letras, números e caracteres especiais.',
+            'email': 'Digite um endereço de e-mail válido.',
+        }   
 
 class InstituicaoForm(forms.ModelForm):
     class Meta:
@@ -66,28 +85,29 @@ class MaterialForm(forms.ModelForm):
         }
 
 class MovimentacaoForm(forms.ModelForm):
+    validade = forms.DateField(
+        required=False, 
+        input_formats= ['%d/%m/%Y'],
+        label='Validade', 
+        widget=forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control','placeholder': 'dd/mm/aaaa'}),
+        help_text='Obrigatório para materiais da categoria ALIMENTOS.')
     def __init__(self, *args, **kwargs):
         self.material = kwargs.pop('material', None)
         super().__init__(*args, **kwargs)
         
     class Meta:
         model = Movimentacao
-        fields = ['tipo', 'quantidade']
+        fields = ['tipo', 'quantidade', 'validade']
 
-# Formulário para cadastro de usuários
-class CadastroUsuarioForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    password1 = forms.CharField(label='Senha', help_text='A senha deve conter pelo menos 8 caracteres, incluindo letras e números.', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
-    password2 = forms.CharField(label='Confirme sua senha', help_text='Digite a mesma senha para confirmação.', widget=forms.PasswordInput(attrs={'class': 'form-control'})) 
+    # Campo validade requerido apenas para materiais de alimentação
+    def clean(self):
+        cleaned_data = super().clean()
+        validade = cleaned_data.get('validade')
+        tipo = self.cleaned_data.get('tipo')
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-        labels = {
-            'username': 'Usuário',
-            'email': 'E-mail',
-        }
-        help_texts = {
-            'username': 'O nome de usuário deve conter apenas letras, números e caracteres especiais.',
-            'email': 'Digite um endereço de e-mail válido.',
-        }   
+        if (self.material and self.material.categoria == 'ALIMENTOS' and not validade and tipo == 'E'):
+            raise forms.ValidationError("Materiais de alimentação devem ter uma data de validade.")
+        if validade and validade < date.today():
+            raise forms.ValidationError("A data de validade não pode ser menor que a data atual.")
+        
+        return self.cleaned_data
