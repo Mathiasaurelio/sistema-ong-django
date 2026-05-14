@@ -1,13 +1,25 @@
 {% extends 'materiais/base.html' %}
 
 {% block conteudo %}
-    <h1>➕ Cadastrar Novo Material</h1>
+<style>
+    .admin-content-wrapper {
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
+
+<div class="admin-content-wrapper">
+    <h2><strong>🏷️Novo Material</strong></h2>
 
     <div class="form-container">
         <form method="POST">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit">Salvar Material</button>
+            <button type="submit"
+            onclick="this.disabled=true; this.form.submit();">Salvar</button>
         </form>
     </div>
+</div>
 {% endblock %}

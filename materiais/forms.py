@@ -2,20 +2,38 @@ from django import forms
 from .models import Material, Movimentacao, Instituicao
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from datetime import date
 import re
+
+# Formulário para cadastro de usuários
+class CadastroUsuarioForm(UserCreationForm):
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label='Senha', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label='Confirme sua senha', widget=forms.PasswordInput(attrs={'class': 'form-control'})) 
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+        labels = {
+            'username': 'Usuário',
+            'email': 'E-mail',
+        }
+        help_texts = {
+            'username': 'O nome de usuário deve conter apenas letras, números e caracteres especiais.',
+            'email': 'Digite um endereço de e-mail válido.',
+        }   
 
 class InstituicaoForm(forms.ModelForm):
     class Meta:
         model = Instituicao
-        fields = ['nome', 'cnpj', 'endereco', 'telefone', 'email']
+        fields = ['nome', 'documento', 'endereco', 'telefone', 'email']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'cnpj': forms.TextInput(attrs={'class': 'form-control'}),
+            'documento': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
-
 
     def clean_nome(self):
         nome = self.cleaned_data.get('nome')
@@ -25,15 +43,26 @@ class InstituicaoForm(forms.ModelForm):
             raise forms.ValidationError('O nome da instituição deve conter pelo menos 3 caracteres.')
         return nome
         
-    def clean_cnpj(self):
-        cnpj = self.cleaned_data.get('cnpj')
-        if not re.match(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', cnpj):
-            raise forms.ValidationError('O CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX.')
-        if cnpj:
-            cnpj_numeros = re.sub(r'\D', '', cnpj)
-            if len(cnpj_numeros) != 14:
-                raise forms.ValidationError('O CNPJ deve conter 14 dígitos numéricos.')
-        return cnpj
+    def clean_documento(self):
+        documento = self.cleaned_data.get('documento')
+        
+        if not documento:
+            raise forms.ValidationError('O CPF/CNPJ é obrigatório.')
+        
+        numeros = re.sub(r'\D', '', documento)
+        
+        if len(numeros) == 11:
+            padrao_cpf = r'^\d{3}\.\d{3}\.\d{3}-\d{2}$'
+            if not re.match(padrao_cpf, documento):
+                raise forms.ValidationError('O CPF deve estar no formato XXX.XXX.XXX-XX.')
+            return documento
+        elif len(numeros) == 14:
+            padrao_cnpj = r'^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$'
+            if not re.match(padrao_cnpj, documento):
+                raise forms.ValidationError('O CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX.')
+            return documento
+        
+        raise forms.ValidationError('O CPF/CNPJ deve conter 11 ou 14 caracteres.')
     
     def clean_endereco(self):
         endereco = self.cleaned_data.get('endereco')
@@ -66,28 +95,29 @@ class MaterialForm(forms.ModelForm):
         }
 
 class MovimentacaoForm(forms.ModelForm):
+    validade = forms.DateField(
+        required=False, 
+        input_formats= ['%d/%m/%Y'],
+        label='Validade', 
+        widget=forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control','placeholder': 'dd/mm/aaaa'}),
+        help_text='Obrigatório para materiais da categoria ALIMENTOS.')
     def __init__(self, *args, **kwargs):
         self.material = kwargs.pop('material', None)
         super().__init__(*args, **kwargs)
         
     class Meta:
         model = Movimentacao
-        fields = ['tipo', 'quantidade']
+        fields = ['tipo', 'quantidade', 'validade']
 
-# Formulário para cadastro de usuários
-class CadastroUsuarioForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    password1 = forms.CharField(label='Senha', help_text='A senha deve conter pelo menos 8 caracteres, incluindo letras e números.', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
-    password2 = forms.CharField(label='Confirme sua senha', help_text='Digite a mesma senha para confirmação.', widget=forms.PasswordInput(attrs={'class': 'form-control'})) 
+    # Campo validade requerido apenas para materiais de alimentação
+    def clean(self):
+        cleaned_data = super().clean()
+        validade = cleaned_data.get('validade')
+        tipo = self.cleaned_data.get('tipo')
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-        labels = {
-            'username': 'Usuário',
-            'email': 'E-mail',
-        }
-        help_texts = {
-            'username': 'O nome de usuário deve conter apenas letras, números e caracteres especiais.',
-            'email': 'Digite um endereço de e-mail válido.',
-        }   
+        if (self.material and self.material.categoria == 'ALIMENTOS' and not validade and tipo == 'E'):
+            raise forms.ValidationError("Materiais de alimentação devem ter uma data de validade.")
+        if validade and validade < date.today():
+            raise forms.ValidationError("A data de validade não pode ser menor que a data atual.")
+        
+        return self.cleaned_data

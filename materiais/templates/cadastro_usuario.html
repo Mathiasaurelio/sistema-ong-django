@@ -1,18 +1,114 @@
 {% extends 'materiais/base.html' %}
 
 {% block conteudo %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 75vh;">
-    
-    <div class="card shadow-lg border-0" style="width: 100%; max-width: 500px; border-radius: 15px;">
-        <div class="card-body p-5">
-            
-            <div class="text-center mb-4">
-                <h2 style="color: #2c3e50; font-weight: bold;">👤 Novo Usuário</h2>
-                <p class="text-muted">Crie sua conta de acesso ao sistema</p>
-            </div>
+<style>
+    nav, footer, .sidebar {
+        display: none !important;
+    }
 
-            {% if form.errors %}
-            <div class="alert alert-danger" role="alert">
+    .split-screen-container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #f4f7f9;
+    }
+
+    .brand-side {
+        flex: 0 0 35%;
+        background-color: #024758;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 60px;
+        color: white;
+    }
+
+    .brand-side h1 {
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+
+    .brand-side p {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+
+    .brand-side .tags {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .form-side {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 40px;    
+    }
+
+    .form-container {
+        width: 100% !important;
+        max-width: 450px !important;
+        background-color: white !important;
+        padding: 40px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .form-container p label {
+        display: block !important;
+        font-weight: 600 !important;
+        color: #5a6a85 !important;
+        margin-bottom: 5px !important;
+        font-size: 0.9rem;
+    }
+
+    .form-container input {
+        width: 100% !important;
+        padding: 12px !important;
+        border: 1px solid #dfe5ef;
+        border-radius: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .form-container button {
+        background-color: #28a745 !important;
+        color: white !important;
+        width: 100% !important;
+        padding: 14px !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        font-size: 1.1rem !important;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    @media (max-width: 992px) {
+        .brand-side {display: none;}
+    }
+
+</style>
+
+<div class="split-screen-container">
+    <div class="brand-side">
+        <h1>SGED</h1>
+        <h5>Sistema de Gestão de Estoque de Doações.</h5>
+        <hr style="width: 400px; border: 2px solid #ffffff; opacity: 1; margin: 20px 0;">
+        <h6>Controle <strong style="color: darkorange;">eficiente</strong>, <strong style="color: rgba(0, 255, 34, 0.63);">transparência total</strong> e <strong style="color: rgba(255, 239, 15, 0.897);">impacto social transformador.</strong></h6>
+    </div>
+
+    <div class="form-side">
+        <div class="form-container">
+        <h2 class="text-center mb-4 fw-bold text-dark">Crie sua Conta</h2>
+
+    {% if form.errors %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
                 <strong>ERRO!</strong> Por favor, corrija os campos abaixo.
                 <ul class="mb-0 mt-2">
                     {% for field in form %}
@@ -20,26 +116,23 @@
                             <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                         {% endfor %}
                     {% endfor %}
+                    
                     {% for error in form.non_field_errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
             </div>
-            {% endif %}
+        {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} <button type="submit">Registrar</button>
+    </form>
 
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-4" style="line-height: 1.8;">
-                    {{ form.as_p }}
-                </div>
-                
-                <button type="submit" class="btn btn-success w-100 py-2 fs-5" style="border-radius: 8px;">
-                    Registrar Conta
-                </button>
-            </form>
-
-        </div>
+    <div class="text-center mt-4">
+        <p class="small text-muted">Já tem uma conta? <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Faça Login</a></p>
+    </div>
+    </div>
     </div>
 </div>
 {% endblock %}

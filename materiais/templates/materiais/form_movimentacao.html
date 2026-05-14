@@ -1,27 +1,83 @@
+{% extends 'materiais/base.html' %}
+
+{% block conteudo %}
+<style>
+    .admin-content-wrapper {
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .form-container {
+        width: 100% !important;
+        max-width: 500px !important;
+        background-color: white !important;
+        padding: 40px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .form-container h4 {
+        font-size: 20px;
+        font-family: Helvetica, sans-serif;
+        font-weight: 600;
+    }
+</style>
+
 {% if form.errors %}
-    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-        <strong>Erro ao salvar:</strong>
-        <ul>
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <li>{{ error }} </li>
-                {% endfor %}  
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+<div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+    <strong>Erro ao salvar:</strong>
+    <ul>
+        {% for field in form %}
+        {% for error in field.errors %}
+        <li>{{ error }} </li>
+        {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
 {% endif %}
 
-<h1>Nova Movimentacao</h1>
-<h2>Movimentar: {{ material.nome }}</h2>
+<div class="admin-content-wrapper">
 
-<p><strong>Categoria:</strong> {{ material.categoria }}</p>
-<p><strong>Estoque atual:</strong> {{ material.estoque_atual }} unidades</p>
+    <h3><strong>↔️ Nova Movimentação</strong></h3>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Salvar</button>
-</form>
+    <div class="form-container">
+        <h4>Material: {{ material.nome }}</h4>
+        <hr style="width: 400px; border: 2px solid #012e68; opacity: 1; margin: 20px 0;"> 
+
+        <p><strong>Categoria:</strong> {{ material.categoria }}</p>
+        <p><strong>Estoque atual:</strong> {{ material.estoque_atual }} unidades</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Salvar</button>
+        </form>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const campoTipo = document.getElementById('id_tipo');
+        const campoValidade = document.getElementById('id_validade')
+
+        const categoria = "{{ material.categoria }}"
+        
+        function controlarValidade() {
+            if (categoria === "ALIMENTOS" && campoTipo.value === "E") {
+                campoValidade.disabled = false;
+            }else {
+                campoValidade.disabled = true;
+                campoValidade.value = "";
+            }
+        }
+        
+        controlarValidade();
+
+        campoTipo.addEventListener('change', controlarValidade);
+    });
+</script>
+{% endblock %}
