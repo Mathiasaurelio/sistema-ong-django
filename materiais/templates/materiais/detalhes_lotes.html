@@ -1,0 +1,46 @@
+{% extends 'materiais/base.html' %}
+
+{% block conteudo %}
+<h3><strong>🔍 Detalhes - {{ material.nome }}</strong></h3>
+
+<div class="card-body p-0">
+    <table class="table table-striped mb-0 text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Entrada</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lote in lotes %}
+            <tr>
+                <td>{{ lote.data_entrada|date:"d/m/Y H:i" }}</td>
+                <td>{{ lote.quantidade }} unidades</td> 
+                <td>{{ lote.validade|date:"d/m/Y" }}</td>
+
+                <td>
+                    {% if lote.validade <= hoje %}
+                        <span class="badge bg-danger" style="padding: 8px;">🚨 Vencido</span>
+                    {% elif lote.proximo_vencimento %}
+                        <span class="badge bg-warning text-dark" style="padding: 8px;">⚠️ Próximo Vencimento</span>
+                    {% else %}
+                        <span class="badge bg-success" style="padding: 8px;">✅ No prazo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="py-4 text-muted">Nenhuma movimentação registrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>   
+
+<div class="mt-4">
+    <a href="{% url 'lista_materiais' %}" class="btn btn-secondary" style="background: #094eb6; border-color: #ffffff">◀ Voltar</a>
+</div>
+{% endblock %}                     
+            

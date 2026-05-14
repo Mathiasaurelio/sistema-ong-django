@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django.db import models
 from django.db.models import Sum
 from django.core.exceptions import ValidationError
@@ -11,6 +11,14 @@ class Lote(models.Model):
     quantidade = models.PositiveBigIntegerField()
     data_entrada = models.DateTimeField(auto_now_add=True)
     validade = models.DateField(null=True, blank=True)
+    
+    @property
+    def proximo_vencimento(self):
+        if self.validade:
+            hoje = date.today()
+            trinta_dias = hoje + timedelta(days=30)
+            return hoje <= self.validade <= trinta_dias 
+        return False
 
     def clean(self):
         if self.material.categoria == 'ALIMENTOS' and not self.validade:

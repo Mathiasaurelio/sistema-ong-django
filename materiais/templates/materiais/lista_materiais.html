@@ -6,53 +6,56 @@
     <table>
         <thead>
             <tr>
-                <th>Nome do Material</th>
+               <th>Nome do Material</th>
                 <th>Categoria</th>
                 <th>Quantidade</th>
                 <th>Estado</th>
-                <th>Ações</th> 
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for item in materiais_status %}
-            <tr
-                {% if item.vencido %}
-                    style="background-color: #f8d7da;"  
-                {% elif item.proximo_vencimento %}
-                    style="background-color: #fff3cd;"  
-                {% endif %}
-            >
+            <tr>
+                <td>
+                    <div style="margin-buttom: 5px;">
+                        {{ item.material.nome }}
+                        {% if item.vencido %}
+                            <span style="color: #dd2336; font-weight: bold;">(VENCIDO)</span>
+                        {% elif item.proximo_vencimento %}
+                            <span style="color: #856404; font-weight: bold;">(PRÓXIMO DO VENCIMENTO)</span>
+                        {% else %}
+                            {{ item.material.nome }}
+                        {% endif %}
+                    </div>
+                </td>
 
-            <td>
-               {% if item.vencido %}
-                    <span style="color: #dc3545; font-weight: bold;">{{ item.material.nome }} (VENCIDO)</span>
-                {% elif item.proximo_vencimento %}
-                    <span style="color: #856404; font-weight: bold;">{{ item.material.nome }} (PRÓXIMO DO VENCIMENTO)</span>
-                {% else %}
-                    {{ item.material.nome }}
-                {% endif %}
-            </td>
-
-            <td>{{ item.material.categoria }}</td>
-            <td>{{ item.estoque }}</td>
-            <td>{{ item.material.estado }}</td>
+                <td>{{ item.material.categoria }}</td>
+                <td style="font-weight: bold;">{{ item.estoque }}</td>
+                <td>{{ item.material.estado }}</td>
             
 
-            <td>
-                <a href="{% url 'editar_material' item.material.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;">✏️ Editar</a>
-                {% if item.material.movimentacoes.exists %}
-                    <span style="color: gray;">🗑️ Excluir</span>
-                {% else %}
-                    <a href="{% url 'excluir_material' item.material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
-                {% endif %}
-                <a href="{% url 'cadastrar_movimentacao' item.material.id %}" style="background-color: #ffffff; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">➕ Movimentar</a>
-                <a href="{% url 'lista_movimentacoes' %}?material={{ item.material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
-            </td>
-                
+                <td>
+                    <div style="display: flex; gap: 4px; flex-wrap: nowrap;">
+                        <a href="{% url 'detalhes_lotes' item.material.id %}" style="background-color: #15b5ce; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;"> 🔍 Detalhes</a>
+
+                        <a href="{% url 'editar_material' item.material.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">✏️ Editar</a>
+
+                        <a href="{% url 'cadastrar_movimentacao' item.material.id %}" style="background-color: #ffffff; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">➕ Movimentar</a>
+                    
+                        <a href="{% url 'lista_movimentacoes' %}?material={{ item.material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
+                        
+                        {% if item.material.movimentacoes.exists %}
+                            <span style="color: gray; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</span>
+                        {% else %}
+                            <a href="{% url 'excluir_material' item.material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
+                        {% endif %}
+                    </div>      
+                </td>
             </tr>
-            {% empty %}
+        
+            {%  empty %}
             <tr>
-                <td colspan="5">Nenhum material cadastrado ainda.</td>
+                <td colspan="5" class="text-muted">Nenhum material cadastrado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -24,25 +24,34 @@ def lista_materiais(request):
     
     materiais = Material.objects.filter(instituicao=instituicao, ativo = True)
     
-    
     materiais_status = []
 
     for material in materiais:
-        lotes = Lote.objects.filter(material=material)
-
+        lotes = Lote.objects.filter(material=material).order_by('validade')
+        hoje = date.today()
+        alerta_vencimento = hoje + timedelta(days=30)
+        
         estoque_atual = sum(l.quantidade for l in lotes)
 
-        vencidos = any(lote.validade and lote.validade <= date.today() for lote in lotes)
-        proximos_vencimento = any(lote.validade and lote.validade <= date.today() + timedelta(days=30) for lote in lotes) 
-
+        vencidos = any(lote.validade and lote.validade <= hoje for lote in lotes)
+        proximos_vencimento = any(lote.validade and hoje <= lote.validade <= alerta_vencimento for lote in lotes)
+        
         materiais_status.append({
             'material': material,
             'estoque': estoque_atual,
             'vencido': vencidos,
-            'proximo_vencimento': proximos_vencimento
+            'proximo_vencimento': proximos_vencimento,
+            'lotes': Lote.objects.filter(material=material, quantidade__gt=0).order_by('validade')
         })
-    
-    return render(request, 'materiais/lista_materiais.html', {'materiais_status': materiais_status})
+        
+    return render(request, 'materiais/lista_materiais.html', {'materiais_status': materiais_status, 'hoje': hoje})
+
+# Tela de detalhes de lotes dos materiais 
+@login_required
+def detalhes_lotes(request, id):
+    material = get_object_or_404(Material, id=id, instituicao__usuario=request.user)
+    lotes = Lote.objects.filter(material=material, quantidade__gt=0).order_by('validade')
+    return render(request, 'materiais/detalhes_lotes.html', {'material': material, 'lotes': lotes, 'hoje': date.today()})
 
 # Tela de cadastro material 
 @login_required
