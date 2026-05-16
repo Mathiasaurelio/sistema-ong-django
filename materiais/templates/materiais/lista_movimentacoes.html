@@ -21,7 +21,7 @@
                         <td>{{ m.data|date:"d/m/Y H:i" }}</td>
                         <td class="fw-bold">{{ m.material.nome }}</td>
                         <td>
-                            {% if m.tipo == 'Entrada' %}
+                            {% if m.tipo == 'E' %}
                                 <span class="badge bg-success">Entrada</span>
                             {% else %}
                                 <span class="badge bg-danger">Saída</span>

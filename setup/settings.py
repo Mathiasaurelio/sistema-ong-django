@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 DATABASES = {
     'default': {
-        ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.mysql',
 
         'NAME': 'estoque_db',
 
